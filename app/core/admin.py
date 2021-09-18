@@ -15,7 +15,7 @@ class UserAdmin(BaseUserAdmin):
             _('Permissions'),
             {'fields': ('is_active', 'is_staff', 'is_superuser')}
         ),
-        (_('Important dates'), {'fields': ('last_login', )})
+        (_('Important dates'), {'fields': ('last_login',)})
     )
 
     add_fieldsets = (
@@ -25,4 +25,10 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
 
+
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ['city', 'street', 'house', 'structure', 'building', 'apartment', 'phone']
+
+
 admin.site.register(models.User, UserAdmin)
+admin.site.register(models.Contact, ContactAdmin)

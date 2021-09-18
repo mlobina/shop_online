@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from core.models import Contact
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -53,6 +54,32 @@ class AuthTokenSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class ContactSerializer(serializers.ModelSerializer):
+    """Serializer for the contact object"""
+
+    class Meta:
+        model = Contact
+        fields = ('id', 'city', 'street', 'house', 'structure', 'building', 'apartment', 'user', 'phone')
+        read_only_fields = ('id',)
+
+    def create(self, validated_data):
+        validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
