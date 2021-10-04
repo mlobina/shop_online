@@ -5,6 +5,7 @@ from django.utils.translation import gettext as _
 from core import models
 
 
+@admin.register(models.User)
 class UserAdmin(BaseUserAdmin):
     ordering = ['id']
     list_display = ['email', 'name', 'company', 'position']
@@ -26,9 +27,38 @@ class UserAdmin(BaseUserAdmin):
     )
 
 
+@admin.register(models.Contact)
 class ContactAdmin(admin.ModelAdmin):
     list_display = ['city', 'street', 'house', 'structure', 'building', 'apartment', 'phone']
 
 
-admin.site.register(models.User, UserAdmin)
-admin.site.register(models.Contact, ContactAdmin)
+@admin.register(models.Shop)
+class ShopAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.Category)
+class CategoryAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.Product)
+class ProductAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.ProductInfo)
+class ProductInfoAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.Parameter)
+class ParameterAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.ProductParameter)
+class ProductParameterAdmin(admin.ModelAdmin):
+    pass
+
+
