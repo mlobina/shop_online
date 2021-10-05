@@ -1,12 +1,66 @@
+from distutils.util import strtobool
+
 from requests import get
+from rest_framework.generics import ListAPIView
 from yaml import load as load_yaml, Loader
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
+from rest_framework.response import Response
 from rest_framework import authentication
 from rest_framework.views import APIView
+from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from core.models import Shop, Category, Product, ProductInfo, Parameter, ProductParameter
+from .serializers import CategorySerializer, ShopSerializer, ProductInfoSerializer
+from .permissions import IsAdminOrReadOnly
+
+
+class CategoryView(ListAPIView):
+    """
+    Класс для просмотра категорий
+    """
+    permission_classes = (IsAdminOrReadOnly,)
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class ShopView(ListAPIView):
+    """
+    Класс для просмотра списка магазинов
+    """
+    permission_classes = (IsAdminOrReadOnly,)
+    queryset = Shop.objects.filter(state=True)
+    serializer_class = ShopSerializer
+
+
+class ProductInfoView(APIView):
+    """
+    Класс для поиска товаров
+    """
+    permission_classes = (IsAdminOrReadOnly,)
+
+    def get(self, request, *args, **kwargs):
+
+        query = Q(shop__state=True)
+        shop_id = request.query_params.get('shop_id')
+        category_id = request.query_params.get('category_id')
+
+        if shop_id:
+            query = query & Q(shop_id=shop_id)
+
+        if category_id:
+            query = query & Q(product__category_id=category_id)
+
+        # фильтруем и отбрасываем дупликаты
+        queryset = ProductInfo.objects.filter(
+            query).select_related(
+            'shop', 'product__category').prefetch_related(
+            'product_parameters__parameter').distinct()
+
+        serializer = ProductInfoSerializer(queryset, many=True)
+
+        return Response(serializer.data)
 
 
 class ShopUpdate(APIView):
@@ -15,6 +69,7 @@ class ShopUpdate(APIView):
     """
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
+    serializer_class = ShopSerializer
 
     def post(self, request, *args, **kwargs):
         if request.user.type != 'shop':
@@ -32,6 +87,7 @@ class ShopUpdate(APIView):
                 stream = get(url).text
 
                 data = load_yaml(stream, Loader=Loader)
+                print(data)
 
                 shop, _ = Shop.objects.get_or_create(name=data['shop'], user_id=request.user.id)
                 # метод get_or_create возвращает массив (кортеж) с двумя значениями,
@@ -62,6 +118,39 @@ class ShopUpdate(APIView):
                                                         value=value)
 
                 return JsonResponse({'Status': True})
+
+        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+
+
+class ShopState(APIView):
+    """
+    Класс для работы со статусом поставщика
+    """
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShopSerializer
+
+    # получить текущий статус
+    def get(self, request, *args, **kwargs):
+        if request.user.type != 'shop':
+            return JsonResponse({'Status': False, 'Error': 'Только для магазинов'}, status=403)
+
+        shop = request.user.shop
+        serializer = ShopSerializer(shop)
+        return Response(serializer.data)
+
+    # изменить текущий статус
+    def post(self, request, *args, **kwargs):
+        if request.user.type != 'shop':
+            return JsonResponse({'Status': False, 'Error': 'Только для магазинов'}, status=403)
+
+        state = request.data.get('state')
+        if state:
+            try:
+                Shop.objects.filter(user_id=request.user.id).update(state=strtobool(state))
+                return JsonResponse({'Status': True})
+            except ValueError as error:
+                return JsonResponse({'Status': False, 'Errors': str(error)})
 
         return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
 
