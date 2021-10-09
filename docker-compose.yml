@@ -11,12 +11,26 @@ services:
     command: >
      sh -c "python manage.py wait_for_db &&
             python manage.py migrate &&
-            python manage.py runserver 0.0.0.0:8000"
+            python manage.py runserver 0.0.0.0:8000 &&
+            celery -A app worker"
+
     environment:
       - DB_HOST=db
       - DB_NAME=app
       - DB_USER=postgres
       - DB_PASS=supersecretpassword
+      - EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+      - EMAIL_HOST='smtp.gmail.com'
+      - EMAIL_HOST_USER='user@gmail.com'  # email-адрес, с которого будет отправляться сообщение
+      - EMAIL_HOST_PASSWORD='password'  # пароль от почтового ящика
+      - EMAIL_PORT='465'
+      - EMAIL_USE_SSL=True
+      - SERVER_EMAIL=EMAIL_HOST_USER
+      - CELERY_BROKER_URL="redis://redis:6379/0"
+      - CELERY_RESULT_BACKEND="redis://redis:6379/0"
+      - CELERY_ACCEPT_CONTENT=['application/json']
+      - CELERY_TASK_SERIALIZER='json'
+      - CELERY_RESULT_SERIALIZER='json'
     depends_on:
       - db
 
@@ -26,4 +40,12 @@ services:
       - POSTGRES_DB=app
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=supersecretpassword
+
+  redis:
+    image: redis:6.0.8
+    container_name: redis-server
+    hostname: redis
+    restart: always
+    ports:
+      - "6379:6379"
 
