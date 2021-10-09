@@ -4,9 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 from rest_framework.viewsets import ModelViewSet
 
-from user.serializers import UserSerializer, AuthTokenSerializer, ContactSerializer
+from .serializers import UserSerializer, AuthTokenSerializer, ContactSerializer
 from core.models import Contact
-
 
 
 class CreateUserView(generics.CreateAPIView):

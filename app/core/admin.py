@@ -62,3 +62,11 @@ class ProductParameterAdmin(admin.ModelAdmin):
     pass
 
 
+@admin.register(models.Order)
+class OrderAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
+    pass

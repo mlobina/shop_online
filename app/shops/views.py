@@ -9,11 +9,13 @@ from django.http import JsonResponse
 from rest_framework.response import Response
 from rest_framework import authentication
 from rest_framework.views import APIView
-from django.db.models import Q
+from django.db.models import Q, Sum, F
 from rest_framework.permissions import IsAuthenticated
 from core.models import Shop, Category, Product, ProductInfo, Parameter, ProductParameter
 from .serializers import CategorySerializer, ShopSerializer, ProductInfoSerializer
 from .permissions import IsAdminOrReadOnly
+from clients.serializers import OrderSerializer
+from core.models import Order
 
 
 class CategoryView(ListAPIView):
@@ -87,8 +89,6 @@ class ShopUpdate(APIView):
                 stream = get(url).text
 
                 data = load_yaml(stream, Loader=Loader)
-                print(data)
-
                 shop, _ = Shop.objects.get_or_create(name=data['shop'], user_id=request.user.id)
                 # метод get_or_create возвращает массив (кортеж) с двумя значениями,
                 # где первый элемент записывается в переменную shop,
@@ -153,4 +153,23 @@ class ShopState(APIView):
                 return JsonResponse({'Status': False, 'Errors': str(error)})
 
         return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+
+
+class ShopOrders(APIView):
+    """
+    Класс для получения заказов поставщиками
+    """
+    permission_classes = (IsAuthenticated,)
+    def get(self, request, *args, **kwargs):
+        if request.user.type != 'shop':
+            return JsonResponse({'Status': False, 'Error': 'Только для магазинов'}, status=403)
+
+        order = Order.objects.filter(
+            ordered_items__product_info__shop__user_id=request.user.id).exclude(state='basket').prefetch_related(
+            'ordered_items__product_info__product__category',
+            'ordered_items__product_info__product_parameters__parameter').select_related('contact').annotate(
+            total_sum=Sum(F('ordered_items__quantity') * F('ordered_items__product_info__price'))).distinct()
+
+        serializer = OrderSerializer(order, many=True)
+        return Response(serializer.data)
 
