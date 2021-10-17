@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_spectacular',
+
     'core',
     'user',
     'shops',
@@ -132,6 +134,22 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '100/day',
+        'uploads': '1/day',
+    }
+
+
 }
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -172,3 +190,8 @@ CELERY_ACCEPT_CONTENT = os.environ.get('CELERY_ACCEPT_CONTENT')
 CELERY_TASK_SERIALIZER = os.environ.get('CELERY_TASK_SERIALIZER')
 CELERY_RESULT_SERIALIZER = os.environ.get('CELERY_RESULT_SERIALIZER')
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API сервиса заказов товаров для розничных сетей',
+    'DESCRIPTION': 'Приложение предназначено для автоматизации закупок в розничной сети.',
+    'VERSION': '1.0.0',
+}

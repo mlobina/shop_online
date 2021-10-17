@@ -22,6 +22,7 @@ class CategoryView(ListAPIView):
     """
     Класс для просмотра категорий
     """
+    throttle_scope = 'anon'
     permission_classes = (IsAdminOrReadOnly,)
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -31,6 +32,7 @@ class ShopView(ListAPIView):
     """
     Класс для просмотра списка магазинов
     """
+    throttle_scope = 'anon'
     permission_classes = (IsAdminOrReadOnly,)
     queryset = Shop.objects.filter(state=True)
     serializer_class = ShopSerializer
@@ -40,7 +42,9 @@ class ProductInfoView(APIView):
     """
     Класс для поиска товаров
     """
+    throttle_scope = 'anon'
     permission_classes = (IsAdminOrReadOnly,)
+    serializer_class = ProductInfoSerializer
 
     def get(self, request, *args, **kwargs):
 
@@ -69,6 +73,7 @@ class ShopUpdate(APIView):
     """
     Класс для обновления прайса от поставщика
     """
+    throttle_scope = 'uploads'
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = ShopSerializer
@@ -126,6 +131,7 @@ class ShopState(APIView):
     """
     Класс для работы со статусом поставщика
     """
+    throttle_scope = 'user'
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = ShopSerializer
@@ -160,6 +166,7 @@ class ShopOrders(APIView):
     Класс для получения заказов поставщиками
     """
     permission_classes = (IsAuthenticated,)
+    serializer_class = OrderSerializer
     def get(self, request, *args, **kwargs):
         if request.user.type != 'shop':
             return JsonResponse({'Status': False, 'Error': 'Только для магазинов'}, status=403)

@@ -32,6 +32,7 @@ class ManageUserView(generics.RetrieveUpdateDestroyAPIView):
 
 class ContactViewSet(ModelViewSet):
     """Manage contacts in the database"""
+    throttle_scope = 'user'
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = ContactSerializer

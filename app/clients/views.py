@@ -15,7 +15,9 @@ class BasketView(APIView):
     """
     Класс для работы с корзиной пользователя
     """
+    throttle_scope = 'user'
     permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = OrderSerializer
 
     # получить корзину
     def get(self, request, *args, **kwargs):
@@ -106,7 +108,9 @@ class OrderView(APIView):
     """
     Класс для получения и размешения заказов пользователями
     """
+    throttle_scope = 'user'
     permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = OrderSerializer
 
     # получить мои заказы
     def get(self, request, *args, **kwargs):
